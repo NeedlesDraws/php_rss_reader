@@ -1,0 +1,8 @@
+PATH="/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/home/kd036/bin"
+PWD="/home/kd036"
+SHELL="/bin/bash"
+SHLVL="1"
+USER="kd036"
+
+# */5 * * * * php -f /home/kd036/public_html/rssInsert.php > /home/kd036/public_html/rssInsert.log
+ */5 * * * * wget -O /home/kd036/public_html/rssInsert.log http://202.231.79.71/~kd036/rssInsert.php

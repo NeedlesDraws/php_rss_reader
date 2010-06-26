@@ -1,0 +1,111 @@
+php_rss_reader/readme(更新：2010-04-24)
+4/23に頂いた以下の指摘
+「2010-04-22 22:25:00でDBへの新着RSSの保存が止まっている,,,」
+の修正のため、以下の更新を行いました。
+
+更新内容：
+  1,crontabの修正
+    1-1,修正ファイル：php_rss_reader/crontab
+    1-2,内容：cronに設定するコマンドの内容を以下のように修正
+      コマンド内容＝RSSの内容を解析してDBにデータを取得する
+        php -f /home/kd036/public_html/rssInsert.php > /home/kd036/public_html/rssInsert.log
+     → wget -O /home/kd036/public_html/rssInsert.log http://202.231.79.71/~kd036/rssInsert.php
+    1-3,理由：　ご指摘頂いた通り、ある時点(頂いた日付ではありませんでしたが)から全く更新
+              されておりませんでした(100%)。
+              　しかし、cron実行時に出力するようにしたログファイルは、日付が更新
+              されていたため、cronの実行はされていると判断しました。
+              　また一方で、ブラウザから手動でrssInsert.php(RSSのDB取得用PHPスクリプト)を実行した際には、
+              正しくデータ取得ができました。
+              　上記２つの事から、cronに設定した"PHP"コマンドの実行に問題があると考えて、
+              "PHP"コマンドのcron設定を削除し、「ブラウザからの手動実行」に近い
+              「"wget"でURLを実行する」cron設定を新規登録しました。
+              動作確認したところ、ほぼ正常にDB取得出来ていることを確認できました。
+              (ただし、rssInsert.phpはPHP5の"simplexml_load_file"メソッドを利用
+              しており、そのメソッドでXML構造が解析出来ない場合("<",">"の文字が文章中に含まれている等)
+              は、まれにDB取得が出来ない場合があります。)
+
+  2,rssInsert.phpの修正
+    2-1,修正ファイル：php_rss_reader/rssInsert.php
+    2-2,内容：XML解析(simplexml_load_file)エラー時の処理追加
+    2-3,理由：XML解析エラーの内容を出力するように修正しました。
+
+php_rss_reader/readme(作成：2010-04-20)
+
+1,導入手順
+
+  1-1,動作環境の構築
+    後述の「2,動作環境」を満たす環境を構築してください。
+    
+  1-2,CreateTable実行
+    以下を実行して、必要なテーブルをDBに作成してください。
+      1-2-1,MySqlにログイン
+      1-2-2,後述の「5,CreateTable」に記載したファイル内のSQLを実行
+      
+  1-3,コンテンツの配置
+    php_rss_reader以下のファイル・フォルダを、wwwルートの配下に
+    配置してください。ただし、以下のファイル・フォルダは必要ありません。
+      1-3-1,php_rss_reader/phpInfo フォルダ以下全て
+      1-3-2,create_table.sql ファイル
+      1-3-3,crontab ファイル
+      1-3-4,readme ファイル
+
+  1-4,Cronの設定
+    端末から以下のコマンドを実行して、crontabの編集画面(vi)を開いてください。
+      crontab -e
+    そして、後述「4,crontab」に記載したファイルの内容を貼り付けてください。
+    以後、5分に一度、http://blog.fc2.com/newentry.rdfからrssデータを
+    取得してDBに保存します。
+    
+  1-5,検索結果の参照
+    1-4で取得されたRSSデータを、ブラウザから検索・参照できます。
+    以下を参照してください。
+      http://「各環境のURL(localhostなど)」/rssSearch.php
+
+2,動作環境
+  必要な動作環境を以下に示します。
+
+  CentOS Linux
+  Apache/2.2.3
+  PHP Version 5.1.6
+  MySql 5.0.77
+  PEAR Version: 1.4.9
+  Pear::Pagerライブラリ
+    同梱しているので別途インストールの必要はありません
+    （フォルダ構成"Pager"フォルダ内に同梱）
+  Smartyテンプレートライブラリ Ver2.6.26
+    同梱しているので別途インストールの必要はありません
+    （フォルダ構成"Pager"フォルダ内に同梱）
+
+  より詳細な情報は、以下を参照してください。
+    php_rss_reader/phpInfo/phpInfo.html
+
+3,フォルダ構成
+  フォルダ構成と各々の概要を記載します。
+  
+  フォルダ構成:        種別:      概要:
+  php_rss_reader
+    Pager             フォルダ    Pear::Pagerライブラリ
+    Smarty            フォルダ    Smartyテンプレートライブラリ
+    cache             フォルダ    Smarty用キャッシュ格納
+    configs           フォルダ    Smarty用設定ファイル格納
+    templates         フォルダ    Smarty用テンプレート格納
+      rssSearch.tpl   ファイル    作成したSmartyテンプレート
+    templates_c       フォルダ    Smarty用キャッシュ格納
+    readme            ファイル    このファイル
+    rssInsert.php     ファイル    作成したcron用rssデータ取得PHPファイル
+    rssSearch.php     ファイル    作成した検索PHPファイル
+
+  以下のフォルダは、必ずパーミッション777にしてください。
+    php_rss_reader/cache
+    php_rss_reader/templates_c
+    php_rss_reader/templates
+    php_rss_reader/configs
+
+4,crontab
+サーバに設定したcronの内容を以下に記載しています。
+php_rss_reader/crontab
+
+5,CreateTable
+サーバのmysqlに作成したtableのsqlを以下に記載しています。
+php_rss_reader/create_table.sql
+
